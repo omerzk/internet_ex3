@@ -1,16 +1,1 @@
-var net = require('net');
-var parser = require('hujirequestparser');
-
-exports.createServer = function(port, callBack, serverObj){
-    var server  = net.createServer();
-    server.listen(port, function(req){
-        serverObj.processReq(parser.parse(req));
-    });
-    return server;
-}
-
-function serverCallBack(req){
-
-    var parseReq = parser.parse(req);
-
-}
+var net = require('net');var parser = require('./hujirequestparser');var TIMEOUT = 2000;exports.createServer = function(port, callBack, serverObj) {    var server = net.createServer(function (client) {        console.log("incoming client");        client.setTimeout(TIMEOUT);        client.setEncoding("utf8");        client.on('data', function (data) {            var res = serverObj.respond(parser.parse(data));            console.log(res.head + res.attributes)            client.write(res.head + res.attributes)            if(res.fileStream !== undefined){                console.log("streaming")                //res.fileStream.pipe(wstream)                res.fileStream.pipe(client)            }        });        client.on('error', function (err) {            console.log(err);        });    });    server.on('error',function(err) {        if (err.code === "EADDRINUSE"){            callBack(err);        }    })    server.listen(port, callBack);    return server;}
